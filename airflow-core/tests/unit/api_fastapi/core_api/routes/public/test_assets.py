@@ -1556,13 +1556,15 @@ class TestDeleteDagAssetQueuedEvent(TestQueuedEventEndpoint):
 
 class TestGetAssetLineage(TestAssets):
     @provide_session
-    def test_should_respond_200_with_lineage(self, test_client, session):
+    def test_should_respond_200_with_lineage(self, test_client, testing_dag_bundle, session):
         # Create an asset
         asset1 = AssetModel(name="target_asset", uri="s3://target/asset")
         session.add(asset1)
         session.flush()
 
         # Add inlet and outlet tasks
+        session.add(DagModel(dag_id="upstream_dag", bundle_name="testing"))
+        session.add(DagModel(dag_id="downstream_dag", bundle_name="testing"))
         session.add(TaskOutletAssetReference(dag_id="upstream_dag", task_id="producer_task", asset=asset1))
         session.add(TaskInletAssetReference(dag_id="downstream_dag", task_id="consumer_task", asset=asset1))
         session.commit()
