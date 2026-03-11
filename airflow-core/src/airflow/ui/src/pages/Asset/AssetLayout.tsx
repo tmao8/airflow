@@ -21,8 +21,7 @@ import { useReactFlow } from "@xyflow/react";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { PanelGroup, Panel, PanelResizeHandle } from "react-resizable-panels";
-import { useParams } from "react-router-dom";
-import { useSearchParams } from "react-router-dom";
+import { useParams, useSearchParams } from "react-router-dom";
 
 import { useAssetServiceGetAsset, useAssetServiceGetAssetEvents } from "openapi/queries";
 import { AssetEvents } from "src/components/Assets/AssetEvents";
@@ -33,6 +32,7 @@ import { SearchParamsKeys } from "src/constants/searchParams";
 import { OpenGroupsProvider } from "src/context/openGroups";
 
 import { AssetGraph } from "./AssetGraph";
+import { AssetLineageGraph } from "./AssetLineageGraph";
 import { AssetPanelButtons } from "./AssetPanelButtons";
 import { CreateAssetEvent } from "./CreateAssetEvent";
 import { Header } from "./Header";
@@ -41,7 +41,7 @@ export const AssetLayout = () => {
   const { i18n, t: translate } = useTranslation(["assets", "common"]);
   const { assetId } = useParams();
   const direction = i18n.dir();
-  const [dependencyType, setDependencyType] = useState<"data" | "scheduling">("scheduling");
+  const [dependencyType, setDependencyType] = useState<"data" | "lineage" | "scheduling">("scheduling");
 
   const { setTableURLState, tableURLState } = useTableURLState();
   const { pagination, sorting } = tableURLState;
@@ -113,7 +113,11 @@ export const AssetLayout = () => {
             <Box height="100%" position="relative" pr={2}>
               <AssetPanelButtons dependencyType={dependencyType} setDependencyType={setDependencyType} />
               <OpenGroupsProvider dagId="~">
-                <AssetGraph asset={asset} dependencyType={dependencyType} />
+                {dependencyType === "lineage" ? (
+                  <AssetLineageGraph asset={asset} />
+                ) : (
+                  <AssetGraph asset={asset} dependencyType={dependencyType} />
+                )}
               </OpenGroupsProvider>
             </Box>
           </Panel>
