@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-import { Flex, HStack, LinkOverlay } from "@chakra-ui/react";
+import { Flex, HStack, LinkOverlay, Text } from "@chakra-ui/react";
 import type { NodeProps, Node as NodeType } from "@xyflow/react";
 import { Link as RouterLink } from "react-router-dom";
 
@@ -28,7 +28,7 @@ import { NodeWrapper } from "./NodeWrapper";
 import type { CustomNodeProps } from "./reactflowUtils";
 
 export const DagNode = ({
-  data: { height, isOpen, isSelected, label, width },
+  data: { disableNavigation, height, isOpen, isSelected, label, width },
 }: NodeProps<NodeType<CustomNodeProps, "dag">>) => {
   const { data: dag } = useDagServiceGetDag({ dagId: label });
 
@@ -55,9 +55,13 @@ export const DagNode = ({
             style={{ zIndex: 2 }}
           />
         </HStack>
-        <LinkOverlay asChild>
-          <RouterLink to={`/dags/${dag?.dag_id ?? label}`}>{dag?.dag_display_name ?? label}</RouterLink>
-        </LinkOverlay>
+        {disableNavigation ? (
+          <Text>{dag?.dag_display_name ?? label}</Text>
+        ) : (
+          <LinkOverlay asChild>
+            <RouterLink to={`/dags/${dag?.dag_id ?? label}`}>{dag?.dag_display_name ?? label}</RouterLink>
+          </LinkOverlay>
+        )}
       </Flex>
     </NodeWrapper>
   );

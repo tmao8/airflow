@@ -29,7 +29,7 @@ import { NodeWrapper } from "./NodeWrapper";
 import type { CustomNodeProps } from "./reactflowUtils";
 
 export const AssetNode = ({
-  data: { height, id, isSelected, label, width },
+  data: { disableNavigation, height, id, isSelected, label, width },
 }: NodeProps<NodeType<CustomNodeProps, "asset">>) => {
   const { t: translate } = useTranslation("components");
   const { dagId = "", runId = "" } = useParams();
@@ -70,9 +70,13 @@ export const AssetNode = ({
           <Heading ml={-2} size="sm">
             <FiDatabase />
           </Heading>
-          <LinkOverlay asChild>
-            <RouterLink to={`/assets/${assetId}`}>{label}</RouterLink>
-          </LinkOverlay>
+          {disableNavigation ? (
+            <Text>{label}</Text>
+          ) : (
+            <LinkOverlay asChild>
+              <RouterLink to={`/assets/${assetId}`}>{label}</RouterLink>
+            </LinkOverlay>
+          )}
         </HStack>
         {assetEvent === undefined ? undefined : (
           <>

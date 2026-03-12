@@ -40,8 +40,14 @@ export const useAssetLineage = (assetId: string | undefined) => useQuery<AssetLi
         enabled: Boolean(assetId),
         queryFn: async () => 
             // Temporary mock fetcher simulating GET /assets/{asset_id}/lineage JSON payload matching Pydantic response
-             new Promise<AssetLineageGraphResponse>((resolve) => {
+             new Promise<AssetLineageGraphResponse>((resolve, reject) => {
                 setTimeout(() => {
+                    if (new URLSearchParams(globalThis.location.search).get("lineageError") === "true") {
+                        reject(new Error("Mock lineage request failed."));
+
+                        return;
+                    }
+
                     resolve({
                         edges: [
                             { source_id: "upstream_dag.producer_task", target_id: `asset:${assetId}` },

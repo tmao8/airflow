@@ -27,6 +27,7 @@ export type CustomNodeProps = {
   assetCondition?: NodeResponse["asset_condition_type"];
   childCount?: number;
   depth?: number;
+  disableNavigation?: boolean;
   height?: number;
   id: string;
   isGroup?: boolean;

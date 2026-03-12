@@ -34,6 +34,7 @@ export const TaskNode = ({
   data: {
     childCount,
     depth,
+    disableNavigation,
     height = 0,
     isGroup,
     isMapped,
@@ -110,17 +111,21 @@ export const TaskNode = ({
           >
             <HStack>
               <TaskIcon />
-              <LinkOverlay asChild>
-                <TaskLink
-                  childCount={thisChildCount}
-                  id={id}
-                  isGroup={isGroup}
-                  isMapped={isMapped}
-                  isOpen={isOpen}
-                  label={displayLabel}
-                  setupTeardownType={setupTeardownType}
-                />
-              </LinkOverlay>
+              {disableNavigation ? (
+                <Text fontWeight="bold">{displayLabel}</Text>
+              ) : (
+                <LinkOverlay asChild>
+                  <TaskLink
+                    childCount={thisChildCount}
+                    id={id}
+                    isGroup={isGroup}
+                    isMapped={isMapped}
+                    isOpen={isOpen}
+                    label={displayLabel}
+                    setupTeardownType={setupTeardownType}
+                  />
+                </LinkOverlay>
+              )}
             </HStack>
             <Text
               color="fg.muted"
@@ -156,7 +161,7 @@ export const TaskNode = ({
             ) : undefined}
             {Boolean(isMapped) || Boolean(isGroup && !isOpen) ? (
               <SegmentedStateBar
-                childStates={taskInstance?.child_states ?? null}
+                childStates={taskInstance?.child_states}
                 fallbackState={taskInstance?.state}
               />
             ) : undefined}
