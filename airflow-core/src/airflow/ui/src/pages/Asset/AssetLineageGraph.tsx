@@ -17,151 +17,229 @@
  * under the License.
  */
 import { Box, Text, useToken } from "@chakra-ui/react";
-import { ReactFlow, Controls, Background, MiniMap, useReactFlow, type Node as ReactFlowNode } from "@xyflow/react";
+import {
+  ReactFlow,
+  Controls,
+  Background,
+  MiniMap,
+  useReactFlow,
+  type NodeMouseHandler,
+  type Node as ReactFlowNode,
+} from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
-import { useEffect, useMemo, type Dispatch, type SetStateAction } from "react";
+import { useEffect, useMemo, useState, type Dispatch, type SetStateAction } from "react";
 import { useTranslation } from "react-i18next";
 import { useParams } from "react-router-dom";
 
 import type { AssetResponse, EdgeResponse, NodeResponse } from "openapi/requests/types.gen";
+import { ErrorAlert } from "src/components/ErrorAlert";
 import { DownloadButton } from "src/components/Graph/DownloadButton";
 import { edgeTypes, nodeTypes } from "src/components/Graph/graphTypes";
 import type { CustomNodeProps } from "src/components/Graph/reactflowUtils";
-import { ErrorAlert } from "src/components/ErrorAlert";
-import { ProgressBar } from "src/components/ui";
 import { useGraphLayout } from "src/components/Graph/useGraphLayout";
+import { ProgressBar } from "src/components/ui";
 import { useColorMode } from "src/context/colorMode";
 import { useAssetLineage } from "src/queries/useAssetLineage";
 import { getReactFlowThemeStyle } from "src/theme";
 
+import { getHighlightedLineage, type LineageDirection } from "./lineageHighlightUtils";
+
 export const AssetLineageGraph = ({
-    activeNodeId,
-    asset,
-    searchTerm,
-    setActiveNodeId,
+  activeNodeId,
+  asset,
+  highlightDirection,
+  searchTerm,
+  setActiveNodeId,
 }: {
-    readonly activeNodeId?: string;
-    readonly asset?: AssetResponse;
-    readonly searchTerm: string;
-    readonly setActiveNodeId: Dispatch<SetStateAction<string | undefined>>;
+  readonly activeNodeId?: string;
+  readonly asset?: AssetResponse;
+  readonly highlightDirection: LineageDirection;
+  readonly searchTerm: string;
+  readonly setActiveNodeId: Dispatch<SetStateAction<string | undefined>>;
 }) => {
-    const { assetId } = useParams();
-    const { colorMode = "light" } = useColorMode();
-    const { setCenter } = useReactFlow();
-    const { t: translate } = useTranslation(["assets"]);
+  const { assetId } = useParams();
+  const { colorMode = "light" } = useColorMode();
+  const { setCenter } = useReactFlow();
+  const { t: translate } = useTranslation(["assets"]);
+  const [hoveredNodeId, setHoveredNodeId] = useState<string | undefined>(undefined);
 
-    // Fetch the lineage graph data
-    const { data: lineageData = { edges: [], nodes: [] }, error, isError, isLoading } = useAssetLineage(assetId);
+  // Fetch the lineage graph data
+  const {
+    data: lineageData = { edges: [], nodes: [] },
+    error,
+    isError,
+    isLoading,
+  } = useAssetLineage(assetId);
 
-    // Map the lineage response to React Flow nodes/edges format needed by layout & custom components
-    const mappedNodes: Array<NodeResponse> = lineageData.nodes.map((node) => ({
+  const mappedNodes: Array<NodeResponse> = useMemo(
+    () =>
+      lineageData.nodes.map((node) => ({
         data: {
-            disableNavigation: true,
-            id: node.id,
-            isSelected: node.id === activeNodeId,
-            label: node.name ?? "unnamed",
-            rest: node,
+          disableNavigation: true,
+          id: node.id,
+          label: node.name ?? "unnamed",
+          rest: node,
         },
         id: node.id,
         label: node.name ?? "unnamed",
         position: { x: 0, y: 0 },
         type: node.node_type === "task" ? "task" : node.node_type === "dag" ? "dag" : "asset",
-    }));
+      })),
+    [lineageData.nodes],
+  );
 
-    const mappedEdges: Array<EdgeResponse> = lineageData.edges.map((edge) => ({
-        data: { rest: { isSelected: edge.source_id === activeNodeId || edge.target_id === activeNodeId } },
+  const mappedEdges: Array<EdgeResponse> = useMemo(
+    () =>
+      lineageData.edges.map((edge) => ({
         id: `${edge.source_id}-${edge.target_id}`,
         source: edge.source_id,
         source_id: edge.source_id,
         target: edge.target_id,
         target_id: edge.target_id,
         type: "custom",
-    }));
+      })),
+    [lineageData.edges],
+  );
 
-    // Automatically layout the converted nodes
-    const { data: layoutData } = useGraphLayout({
-        direction: "RIGHT",
-        edges: mappedEdges,
-        nodes: mappedNodes,
-        openGroupIds: [],
+  const highlightedNodeId = hoveredNodeId ?? activeNodeId;
+
+  const { highlightedEdgeIds, highlightedNodeIds } = useMemo(
+    () =>
+      getHighlightedLineage({
+        direction: highlightDirection,
+        edges: lineageData.edges,
+        nodeId: highlightedNodeId,
+      }),
+    [highlightDirection, highlightedNodeId, lineageData.edges],
+  );
+
+  // Automatically layout the converted nodes
+  const { data: layoutData } = useGraphLayout({
+    direction: "RIGHT",
+    edges: mappedEdges,
+    nodes: mappedNodes,
+    openGroupIds: [],
+  });
+
+  const [selectedDarkColor, selectedLightColor] = useToken("colors", ["bg.muted", "bg.emphasized"]);
+  const selectedColor = colorMode === "dark" ? selectedDarkColor : selectedLightColor;
+  const layoutEdges = useMemo(
+    () =>
+      (layoutData?.edges ?? []).map((edge) => ({
+        ...edge,
+        data: {
+          rest: {
+            ...edge.data?.rest,
+            isSelected: highlightedEdgeIds.has(edge.id),
+            lineageDirection: highlightedEdgeIds.has(edge.id) ? highlightDirection : undefined,
+          },
+        },
+      })),
+    [highlightDirection, highlightedEdgeIds, layoutData?.edges],
+  );
+  const layoutNodes = useMemo(
+    () =>
+      (layoutData?.nodes ?? []).map((node) => {
+        const lineageStyle =
+          node.id === highlightedNodeId
+            ? "focus"
+            : highlightedNodeIds.has(node.id)
+              ? highlightDirection
+              : undefined;
+
+        return {
+          ...node,
+          data: {
+            ...node.data,
+            disableNavigation: true,
+            isSelected: lineageStyle !== undefined,
+            lineageStyle,
+          },
+        };
+      }),
+    [highlightDirection, highlightedNodeId, highlightedNodeIds, layoutData?.nodes],
+  );
+
+  useEffect(() => {
+    const trimmedSearch = searchTerm.trim().toLowerCase();
+
+    if (trimmedSearch === "" || layoutNodes.length === 0) {
+      return;
+    }
+
+    const matchedNode = layoutNodes.find((node) => {
+      const nodeId = node.id.toLowerCase();
+      const nodeLabel = node.data.label.toLowerCase();
+
+      return nodeLabel.includes(trimmedSearch) || nodeId.includes(trimmedSearch);
     });
 
-    const [selectedDarkColor, selectedLightColor] = useToken("colors", ["bg.muted", "bg.emphasized"]);
-    const selectedColor = colorMode === "dark" ? selectedDarkColor : selectedLightColor;
-    const layoutEdges = useMemo(() => layoutData?.edges ?? [], [layoutData?.edges]);
-    const layoutNodes = useMemo(() => layoutData?.nodes ?? [], [layoutData?.nodes]);
-
-    useEffect(() => {
-        const trimmedSearch = searchTerm.trim().toLowerCase();
-
-        if (trimmedSearch === "" || layoutNodes.length === 0) {
-            return;
-        }
-
-        const matchedNode = layoutNodes.find((node) => {
-            const nodeId = node.id.toLowerCase();
-            const nodeLabel = node.data.label.toLowerCase();
-
-            return nodeLabel.includes(trimmedSearch) || nodeId.includes(trimmedSearch);
-        });
-
-        if (!matchedNode) {
-            return;
-        }
-
-        setActiveNodeId(matchedNode.id);
-        void setCenter(
-            matchedNode.position.x + (matchedNode.width ?? 0) / 2,
-            matchedNode.position.y + (matchedNode.height ?? 0) / 2,
-            { duration: 300, zoom: 1 },
-        );
-    }, [layoutNodes, searchTerm, setActiveNodeId, setCenter]);
-
-    if (isLoading) {
-        return <ProgressBar size="xs" visibility="visible" />;
+    if (!matchedNode) {
+      return;
     }
 
-    if (isError) {
-        return <ErrorAlert error={error} />;
-    }
-
-    if (layoutNodes.length === 0) {
-        return (
-            <Box p={4}>
-                <Text color="fg.muted">{translate("no_lineage_data_found")}</Text>
-            </Box>
-        );
-    }
-
-    return (
-        <ReactFlow
-            colorMode={colorMode}
-            defaultEdgeOptions={{ zIndex: 1 }}
-            edges={layoutEdges}
-            edgeTypes={edgeTypes}
-            fitView
-            maxZoom={1.5}
-            minZoom={0.25}
-            nodes={layoutNodes}
-            nodesDraggable={false}
-            nodeTypes={nodeTypes}
-            onlyRenderVisibleElements
-            onNodeClick={(_, node) => {
-                setActiveNodeId(node.id);
-            }}
-            style={getReactFlowThemeStyle(colorMode)}
-        >
-            <Background />
-            <Controls showInteractive={false} />
-            <MiniMap
-                nodeStrokeColor={(node: ReactFlowNode<CustomNodeProps>) =>
-                    node.data.isSelected && selectedColor !== undefined ? selectedColor : ""
-                }
-                nodeStrokeWidth={15}
-                pannable
-                zoomable
-            />
-            <DownloadButton name={`lineage-${asset?.name ?? assetId}`} />
-        </ReactFlow>
+    setActiveNodeId(matchedNode.id);
+    void setCenter(
+      matchedNode.position.x + (matchedNode.width ?? 0) / 2,
+      matchedNode.position.y + (matchedNode.height ?? 0) / 2,
+      { duration: 300, zoom: 1 },
     );
+  }, [layoutNodes, searchTerm, setActiveNodeId, setCenter]);
+
+  if (isLoading) {
+    return <ProgressBar size="xs" visibility="visible" />;
+  }
+
+  if (isError) {
+    return <ErrorAlert error={error} />;
+  }
+
+  if (layoutNodes.length === 0) {
+    return (
+      <Box p={4}>
+        <Text color="fg.muted">{translate("no_lineage_data_found")}</Text>
+      </Box>
+    );
+  }
+
+  const onNodeMouseEnter: NodeMouseHandler = (_event, node) => {
+    setHoveredNodeId(node.id);
+  };
+  const onNodeMouseLeave: NodeMouseHandler = () => {
+    setHoveredNodeId(undefined);
+  };
+
+  return (
+    <ReactFlow
+      colorMode={colorMode}
+      defaultEdgeOptions={{ zIndex: 1 }}
+      edges={layoutEdges}
+      edgeTypes={edgeTypes}
+      fitView
+      maxZoom={1.5}
+      minZoom={0.25}
+      nodes={layoutNodes}
+      nodesDraggable={false}
+      nodeTypes={nodeTypes}
+      onlyRenderVisibleElements
+      onNodeClick={(_, node) => {
+        setActiveNodeId(node.id);
+      }}
+      onNodeMouseEnter={onNodeMouseEnter}
+      onNodeMouseLeave={onNodeMouseLeave}
+      style={getReactFlowThemeStyle(colorMode)}
+    >
+      <Background />
+      <Controls showInteractive={false} />
+      <MiniMap
+        nodeStrokeColor={(node: ReactFlowNode<CustomNodeProps>) =>
+          node.data.isSelected && selectedColor !== undefined ? selectedColor : ""
+        }
+        nodeStrokeWidth={15}
+        pannable
+        zoomable
+      />
+      <DownloadButton name={`lineage-${asset?.name ?? assetId}`} />
+    </ReactFlow>
+  );
 };

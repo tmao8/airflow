@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-import { HStack, Box, Text, Code } from "@chakra-ui/react";
+import { HStack, Box, Text, Code, Button } from "@chakra-ui/react";
 import { useReactFlow } from "@xyflow/react";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -37,6 +37,7 @@ import { AssetLineageGraph } from "./AssetLineageGraph";
 import { AssetPanelButtons } from "./AssetPanelButtons";
 import { CreateAssetEvent } from "./CreateAssetEvent";
 import { Header } from "./Header";
+import type { LineageDirection } from "./lineageHighlightUtils";
 
 export const AssetLayout = () => {
   const { i18n, t: translate } = useTranslation(["assets", "common"]);
@@ -50,6 +51,7 @@ export const AssetLayout = () => {
     assetId === undefined ? undefined : `asset:${assetId}`,
   );
   const [lineageSearch, setLineageSearch] = useState("");
+  const [lineageDirection, setLineageDirection] = useState<LineageDirection>("downstream");
 
   const { setTableURLState, tableURLState } = useTableURLState();
   const { pagination, sorting } = tableURLState;
@@ -118,12 +120,36 @@ export const AssetLayout = () => {
               <AssetPanelButtons dependencyType={dependencyType} setDependencyType={setDependencyType} />
               {dependencyType === "lineage" ? (
                 <Box left={3} position="absolute" right={3} top={14} zIndex={5}>
-                  <SearchBar
-                    defaultValue={lineageSearch}
-                    hotkeyDisabled
-                    onChange={setLineageSearch}
-                    placeholder="Search lineage nodes"
-                  />
+                  <HStack>
+                    <Box flex={1}>
+                      <SearchBar
+                        defaultValue={lineageSearch}
+                        hotkeyDisabled
+                        onChange={setLineageSearch}
+                        placeholder="Search lineage nodes"
+                      />
+                    </Box>
+                    <Button
+                      colorPalette={lineageDirection === "upstream" ? "blue" : "gray"}
+                      onClick={() => {
+                        setLineageDirection("upstream");
+                      }}
+                      size="sm"
+                      variant={lineageDirection === "upstream" ? "solid" : "outline"}
+                    >
+                      {translate("assets:lineage_upstream", { defaultValue: "Upstream" })}
+                    </Button>
+                    <Button
+                      colorPalette={lineageDirection === "downstream" ? "blue" : "gray"}
+                      onClick={() => {
+                        setLineageDirection("downstream");
+                      }}
+                      size="sm"
+                      variant={lineageDirection === "downstream" ? "solid" : "outline"}
+                    >
+                      {translate("assets:lineage_downstream", { defaultValue: "Downstream" })}
+                    </Button>
+                  </HStack>
                 </Box>
               ) : undefined}
               <OpenGroupsProvider dagId="~">
@@ -131,6 +157,7 @@ export const AssetLayout = () => {
                   <AssetLineageGraph
                     activeNodeId={activeNodeId}
                     asset={asset}
+                    highlightDirection={lineageDirection}
                     searchTerm={lineageSearch}
                     setActiveNodeId={setActiveNodeId}
                   />
