@@ -75,7 +75,6 @@ export const AssetLineageGraph = ({
     () =>
       lineageData.nodes.map((node) => ({
         data: {
-          disableNavigation: true,
           id: node.id,
           label: node.name ?? "unnamed",
           rest: node,
@@ -151,7 +150,6 @@ export const AssetLineageGraph = ({
           ...node,
           data: {
             ...node.data,
-            disableNavigation: true,
             isSelected: lineageStyle !== undefined,
             lineageStyle,
           },
