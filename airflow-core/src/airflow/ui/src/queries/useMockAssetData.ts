@@ -122,7 +122,8 @@ const mockAssetEvents: AssetEventCollectionResponse = {
 };
 
 const mockEnabled = () => new URLSearchParams(globalThis.location.search).get("mockAssets") === "true";
-const mockErrorEnabled = () => new URLSearchParams(globalThis.location.search).get("mockAssetsError") === "true";
+const mockErrorEnabled = () =>
+  new URLSearchParams(globalThis.location.search).get("mockAssetsError") === "true";
 
 const filterAssets = (assets: Array<AssetResponse>, namePattern?: string) => {
   if (namePattern === undefined || namePattern === "") {
@@ -148,11 +149,9 @@ export const useAssetListData = ({
   orderBy?: Array<string>;
 }) => {
   const useMock = mockEnabled();
-  const realQuery = useAssetServiceGetAssets(
-    { limit, namePattern, offset, orderBy },
-    undefined,
-    { enabled: !useMock },
-  );
+  const realQuery = useAssetServiceGetAssets({ limit, namePattern, offset, orderBy }, undefined, {
+    enabled: !useMock,
+  });
   const mockQuery = useQuery<AssetCollectionResponse>({
     enabled: useMock,
     queryFn: async () =>
@@ -182,11 +181,9 @@ export const useAssetListData = ({
 
 export const useAssetDetailData = (assetId?: number) => {
   const useMock = mockEnabled();
-  const realQuery = useAssetServiceGetAsset(
-    { assetId: assetId ?? 0 },
-    undefined,
-    { enabled: !useMock && assetId !== undefined },
-  );
+  const realQuery = useAssetServiceGetAsset({ assetId: assetId ?? 0 }, undefined, {
+    enabled: !useMock && assetId !== undefined,
+  });
   const mockQuery = useQuery<AssetResponse | undefined>({
     enabled: useMock && assetId !== undefined,
     queryFn: async () =>
@@ -260,7 +257,17 @@ export const useAssetEventsData = ({
           });
         }, 300);
       }),
-    queryKey: ["mockAssetEvents", assetId, limit, offset, orderBy, sourceDagId, sourceTaskId, timestampGte, timestampLte],
+    queryKey: [
+      "mockAssetEvents",
+      assetId,
+      limit,
+      offset,
+      orderBy,
+      sourceDagId,
+      sourceTaskId,
+      timestampGte,
+      timestampLte,
+    ],
   });
 
   return useMock ? mockQuery : realQuery;

@@ -46,7 +46,9 @@ const createColumns = (
     accessorKey: "name",
     cell: ({ row: { original } }: AssetRow) => (
       <Link asChild color="fg.info" fontWeight="bold">
-        <RouterLink to={`/assets/${original.id}${useMockAssets ? "?mockAssets=true" : ""}`}>{original.name}</RouterLink>
+        <RouterLink to={`/assets/${original.id}${useMockAssets ? "?mockAssets=true" : ""}`}>
+          {original.name}
+        </RouterLink>
       </Link>
     ),
     header: () => translate("name"),
