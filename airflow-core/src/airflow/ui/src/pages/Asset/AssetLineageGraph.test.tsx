@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-import { render, screen } from "@testing-library/react";
+import { render, screen, waitFor } from "@testing-library/react";
 import type { ReactNode } from "react";
 import { MemoryRouter, Route, Routes } from "react-router-dom";
 import { beforeEach, describe, expect, it, vi } from "vitest";
@@ -79,9 +79,16 @@ vi.mock("@xyflow/react", () => ({
 
 type LineageNode = {
   data?: {
+    label?: string;
     lineageStyle?: "downstream" | "focus" | "upstream";
   };
+  height?: number;
   id: string;
+  position?: {
+    x: number;
+    y: number;
+  };
+  width?: number;
 };
 
 type LineageEdge = {
@@ -94,17 +101,27 @@ type LineageEdge = {
   id: string;
 };
 
-const renderAssetLineageGraph = (direction: "downstream" | "upstream") =>
+const renderAssetLineageGraph = ({
+  activeNodeId = "asset:1",
+  direction,
+  searchTerm = "",
+  setActiveNodeId = vi.fn(),
+}: {
+  readonly activeNodeId?: string;
+  readonly direction: "downstream" | "upstream";
+  readonly searchTerm?: string;
+  readonly setActiveNodeId?: ReturnType<typeof vi.fn>;
+}) =>
   render(
     <MemoryRouter initialEntries={["/assets/1"]}>
       <Routes>
         <Route
           element={
             <AssetLineageGraph
-              activeNodeId="asset:1"
+              activeNodeId={activeNodeId}
               highlightDirection={direction}
-              searchTerm=""
-              setActiveNodeId={vi.fn()}
+              searchTerm={searchTerm}
+              setActiveNodeId={setActiveNodeId}
             />
           }
           path="/assets/:assetId"
@@ -162,7 +179,7 @@ describe("AssetLineageGraph integration", () => {
   });
 
   it("applies downstream highlight styles to downstream lineage only", () => {
-    renderAssetLineageGraph("downstream");
+    renderAssetLineageGraph({ direction: "downstream" });
 
     const { edges, nodes } = getRenderedGraph();
     const selectedEdgeIds = new Set(
@@ -181,7 +198,7 @@ describe("AssetLineageGraph integration", () => {
   });
 
   it("applies upstream highlight styles to upstream lineage only", () => {
-    renderAssetLineageGraph("upstream");
+    renderAssetLineageGraph({ direction: "upstream" });
 
     const { edges, nodes } = getRenderedGraph();
     const selectedEdges = edges.filter((edge) => edge.data?.rest?.isSelected);
@@ -198,5 +215,100 @@ describe("AssetLineageGraph integration", () => {
     expect(nodeStyles.get("upstream_dag.producer_task")).toBe("upstream");
     expect(nodeStyles.get("downstream_dag.consumer_task")).toBeUndefined();
     expect(nodeStyles.get("asset:2")).toBeUndefined();
+  });
+
+  it("selects and centers the first matched lineage node when searching by label", async () => {
+    const setActiveNodeId = vi.fn();
+
+    mockUseGraphLayout.mockReturnValue({
+      data: {
+        edges: [],
+        nodes: [
+          {
+            data: { label: "asset_1" },
+            height: 40,
+            id: "asset:1",
+            position: { x: 0, y: 0 },
+            width: 120,
+          },
+          {
+            data: { label: "asset_2" },
+            height: 60,
+            id: "asset:2",
+            position: { x: 400, y: 200 },
+            width: 140,
+          },
+        ],
+      },
+    });
+
+    renderAssetLineageGraph({
+      direction: "downstream",
+      searchTerm: "asset_2",
+      setActiveNodeId,
+    });
+
+    await waitFor(() => {
+      expect(setActiveNodeId).toHaveBeenCalledWith("asset:2");
+      expect(mockSetCenter).toHaveBeenCalledWith(470, 230, {
+        duration: 300,
+        zoom: 1,
+      });
+    });
+  });
+
+  it("selects and centers the first matched lineage node when searching by id", async () => {
+    const setActiveNodeId = vi.fn();
+
+    mockUseGraphLayout.mockReturnValue({
+      data: {
+        edges: [],
+        nodes: [
+          {
+            data: { label: "asset_1" },
+            height: 40,
+            id: "asset:1",
+            position: { x: 0, y: 0 },
+            width: 120,
+          },
+          {
+            data: { label: "consumer_task" },
+            height: 50,
+            id: "downstream_dag.consumer_task",
+            position: { x: 300, y: 120 },
+            width: 160,
+          },
+        ],
+      },
+    });
+
+    renderAssetLineageGraph({
+      direction: "downstream",
+      searchTerm: "consumer_task",
+      setActiveNodeId,
+    });
+
+    await waitFor(() => {
+      expect(setActiveNodeId).toHaveBeenCalledWith("downstream_dag.consumer_task");
+      expect(mockSetCenter).toHaveBeenCalledWith(380, 145, {
+        duration: 300,
+        zoom: 1,
+      });
+    });
+  });
+
+  it("does not select or center a lineage node when the search term has no match", async () => {
+    const setActiveNodeId = vi.fn();
+
+    renderAssetLineageGraph({
+      direction: "downstream",
+      searchTerm: "missing_node",
+      setActiveNodeId,
+    });
+
+    await waitFor(() => {
+      expect(setActiveNodeId).not.toHaveBeenCalled();
+      expect(mockSetCenter).not.toHaveBeenCalled();
+    });
   });
 });
