@@ -76,11 +76,11 @@ export const AssetLineageGraph = ({
       lineageData.nodes.map((node) => ({
         data: {
           id: node.id,
-          label: node.name ?? "unnamed",
+          label: node.name,
           rest: node,
         },
         id: node.id,
-        label: node.name ?? "unnamed",
+        label: node.name,
         position: { x: 0, y: 0 },
         type: node.node_type === "task" ? "task" : node.node_type === "dag" ? "dag" : "asset",
       })),
