@@ -76,6 +76,33 @@ export type AssetEventResponse = {
 };
 
 /**
+ * An edge in the asset lineage graph.
+ */
+export type AssetLineageEdge = {
+    source_id: string;
+    target_id: string;
+};
+
+/**
+ * Asset lineage graph response.
+ */
+export type AssetLineageGraphResponse = {
+    nodes: Array<AssetLineageNode>;
+    edges: Array<AssetLineageEdge>;
+};
+
+/**
+ * A node in the asset lineage graph.
+ */
+export type AssetLineageNode = {
+    id: string;
+    node_type: string;
+    name: string;
+    uri?: string | null;
+    group?: string | null;
+};
+
+/**
  * Asset serializer for responses.
  */
 export type AssetResponse = {
@@ -2488,6 +2515,12 @@ export type GetAssetData = {
 
 export type GetAssetResponse = AssetResponse;
 
+export type GetAssetLineageData = {
+    assetId: number;
+};
+
+export type GetAssetLineageResponse = AssetLineageGraphResponse;
+
 export type GetDagAssetQueuedEventsData = {
     before?: string | null;
     dagId: string;
@@ -4333,6 +4366,33 @@ export type $OpenApiTs = {
                  * Successful Response
                  */
                 200: AssetResponse;
+                /**
+                 * Unauthorized
+                 */
+                401: HTTPExceptionResponse;
+                /**
+                 * Forbidden
+                 */
+                403: HTTPExceptionResponse;
+                /**
+                 * Not Found
+                 */
+                404: HTTPExceptionResponse;
+                /**
+                 * Validation Error
+                 */
+                422: HTTPValidationError;
+            };
+        };
+    };
+    '/api/v2/assets/{asset_id}/lineage': {
+        get: {
+            req: GetAssetLineageData;
+            res: {
+                /**
+                 * Successful Response
+                 */
+                200: AssetLineageGraphResponse;
                 /**
                  * Unauthorized
                  */
