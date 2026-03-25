@@ -1760,6 +1760,44 @@ class TestGetAssetLineage(TestAssets):
         # C should NOT be reached with depth=1
         assert f"asset:{asset_c.id}" not in nodes
 
+    @provide_session
+    def test_isolated_asset(self, test_client, testing_dag_bundle, session):
+        """Test that an asset with no lineage relationships returns just its own node."""
+        asset_model = AssetModel(name="isolated_asset", uri="s3://isolated/1")
+        session.add(asset_model)
+        session.commit()
+
+        response = test_client.get(f"/assets/{asset_model.id}/lineage")
+        assert response.status_code == 200
+
+        data = response.json()
+        assert len(data["edges"]) == 0
+        assert len(data["nodes"]) == 1
+        assert data["nodes"][0]["id"] == f"asset:{asset_model.id}"
+
+    @provide_session
+    def test_depth_boundaries(self, test_client, testing_dag_bundle, session):
+        """Test depth boundaries: depth < 1 defaults to 1, depth > _MAX_LINEAGE_DEPTH skips to max."""
+        asset_a = AssetModel(name="asset_a", uri="s3://a")
+        asset_b = AssetModel(name="asset_b", uri="s3://b")
+        session.add_all([asset_a, asset_b])
+        session.flush()
+
+        session.add(DagModel(dag_id="dag1", bundle_name="testing"))
+        session.add(TaskInletAssetReference(dag_id="dag1", task_id="t1", asset=asset_a))
+        session.add(TaskOutletAssetReference(dag_id="dag1", task_id="t1", asset=asset_b))
+        session.commit()
+
+        # Depth 0 should fall back to 1
+        response_min = test_client.get(f"/assets/{asset_a.id}/lineage?depth=0")
+        assert response_min.status_code == 200
+        assert len(response_min.json()["nodes"]) == 4
+
+        # Depth 100 should fall back to 10 (the _MAX_LINEAGE_DEPTH) and return successfully
+        response_max = test_client.get(f"/assets/{asset_a.id}/lineage?depth=100")
+        assert response_max.status_code == 200
+        assert len(response_max.json()["nodes"]) == 4
+
     def test_should_respond_404(self, test_client):
         response = test_client.get("/assets/999/lineage")
         assert response.status_code == 404

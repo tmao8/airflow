@@ -162,4 +162,47 @@ describe("AssetLineageGraph integration", () => {
       expect(setActiveNodeId).not.toHaveBeenCalled(); expect(mockSetCenter).not.toHaveBeenCalled();
     });
   });
+
+  it("renders a loading indicator when isLoading is true", () => {
+    mockUseAssetLineage.mockReturnValue({
+      data: { edges: [], nodes: [] },
+      error: undefined,
+      isError: false,
+      isLoading: true,
+    });
+    renderAssetLineageGraph({ direction: "downstream" });
+    expect(screen.getByRole("progressbar")).toBeInTheDocument();
+  });
+
+  it("renders an error message when isError is true", () => {
+    mockUseAssetLineage.mockReturnValue({
+      data: { edges: [], nodes: [] },
+      error: new Error("Test error"),
+      isError: true,
+      isLoading: false,
+    });
+    renderAssetLineageGraph({ direction: "downstream" });
+    expect(screen.getByText("Test error")).toBeInTheDocument();
+  });
+
+  it("handles isolated asset with empty lineage edges", () => {
+    mockUseAssetLineage.mockReturnValue({
+      data: { edges: [], nodes: [{ id: "asset:1", name: "isolated_asset", node_type: "asset" }] },
+      error: undefined,
+      isError: false,
+      isLoading: false,
+    });
+    mockUseGraphLayout.mockReturnValue({
+      data: {
+        edges: [],
+        nodes: [{ data: { label: "isolated_asset" }, height: 40, id: "asset:1", position: { x: 0, y: 0 }, width: 120 }],
+      },
+    });
+    renderAssetLineageGraph({ direction: "downstream" });
+    const { edges, nodes } = getRenderedGraph();
+
+    expect(edges).toHaveLength(0);
+    expect(nodes).toHaveLength(1);
+    expect(nodes[0]?.id).toBe("asset:1");
+  });
 });
