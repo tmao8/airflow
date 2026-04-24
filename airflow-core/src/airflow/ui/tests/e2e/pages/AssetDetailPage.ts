@@ -29,6 +29,20 @@ export class AssetDetailPage extends BasePage {
     super(page);
   }
 
+  public get graphViewport(): Locator {
+    return this.page.locator(".react-flow__viewport");
+  }
+
+  public get lineageSearchInput(): Locator {
+    return this.page.getByPlaceholder("Search lineage nodes");
+  }
+
+  public graphNode(name: string): Locator {
+    return this.page.locator(".react-flow__node").filter({
+      has: this.page.getByRole("link", { exact: true, name }),
+    });
+  }
+
   public async clickOnAsset(name: string): Promise<void> {
     const responsePromise = this.page.waitForResponse(
       (res) => /\/api\/v2\/assets\/\d+(\?|$)/.test(res.url()) && res.ok(),
@@ -47,6 +61,21 @@ export class AssetDetailPage extends BasePage {
     await this.navigateTo(AssetDetailPage.url);
   }
 
+  public async gotoMockAsset(assetId = 1): Promise<void> {
+    await this.navigateTo(`/assets/${assetId}?mockAssets=true`);
+  }
+
+  public async getViewportTransform(): Promise<string> {
+    return this.graphViewport.evaluate((element) => getComputedStyle(element).transform);
+  }
+
+  public async searchLineage(term: string): Promise<void> {
+    await this.lineageSearchInput.fill(term);
+  }
+
+  public async verifyAssetDetails(name: string): Promise<void> {
+    await expect(this.page.getByRole("heading", { name })).toBeVisible();
+  }
   public async verifyProducingTasks(): Promise<void> {
     await this.verifyStatSection("Producing Tasks");
   }
