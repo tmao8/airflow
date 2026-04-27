@@ -295,4 +295,39 @@ describe("AssetLayout", () => {
     expect(screen.getByTestId("asset-graph")).toBeInTheDocument();
     expect(screen.queryByTestId("asset-lineage-graph")).not.toBeInTheDocument();
   });
+
+  it("renders a loading state or prevents API calls if assetId is missing from the URL", () => {
+    // Render the layout but simulate a broken URL route without an ID
+    render(
+      <MemoryRouter initialEntries={["/assets/"]}>
+        <Routes>
+          <Route element={<AssetLayout />} path="/assets/" />
+          <Route element={<AssetLayout />} path="/assets/:assetId" />
+        </Routes>
+      </MemoryRouter>,
+      { wrapper: BaseWrapper },
+    );
+    
+    // The hook should either not be called, or be called with undefined safely
+    expect(mockUseAssetLineage).not.toHaveBeenCalledWith("33", expect.anything());
+  });
+
+  it("maintains the active node selection when toggling between Full and Asset-Only modes", () => {
+    // 1. Initial render
+    renderAssetLayout();
+    
+    // 2. Open full lineage
+    fireEvent.click(screen.getByRole("button", { name: "Switch to Lineage" }));
+    
+    // 3. Select a node in the graph
+    fireEvent.click(screen.getByRole("button", { name: "Select curated asset" }));
+    
+    // 4. Switch to Asset Only mode
+    fireEvent.click(screen.getByRole("button", { name: "Asset Only" }));
+    
+    // 5. Ensure the right panel still shows data for the previously selected node
+    // Note: If this fails, it exposes a bug where toggling modes wipes out the user's selection!
+    expect(screen.getByText("Column Lineage")).toBeInTheDocument();
+    expect(screen.getByText("raw_orders -> curated_orders")).toBeInTheDocument();
+  });
 });

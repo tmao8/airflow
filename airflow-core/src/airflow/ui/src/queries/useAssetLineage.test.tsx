@@ -136,4 +136,27 @@ describe("useAssetLineage", () => {
 
     expect(result.current.error).toEqual(new Error("Mock asset lineage request failed."));
   });
+
+  it("strictly passes the depth parameter to the asset-only API when provided", async () => {
+    // This kills a mutant where a developer accidentally hardcodes depth or drops it from the payload
+    const { result } = renderHook(() => useAssetLineage("99", { mode: "asset_only", depth: 42 }), {
+      wrapper: TestWrapper,
+    });
+    
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+    
+    expect(mockGetAssetOnlyLineage).toHaveBeenCalledTimes(1);
+    expect(mockGetAssetOnlyLineage).toHaveBeenCalledWith({ assetId: 99, depth: 42 });
+    expect(mockGetAssetLineage).not.toHaveBeenCalled();
+  });
+
+  it("handles a real API failure gracefully when not in mock mode", async () => {
+    // Simulate a 500 Internal Server Error from the real backend
+    mockGetAssetLineage.mockRejectedValueOnce(new Error("Network Error"));
+    
+    const { result } = renderHook(() => useAssetLineage("33", { mode: "full" }), { wrapper: TestWrapper });
+    
+    await waitFor(() => expect(result.current.isError).toBe(true));
+    expect(result.current.error).toEqual(new Error("Network Error"));
+  });
 });
