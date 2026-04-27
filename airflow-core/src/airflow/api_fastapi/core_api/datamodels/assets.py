@@ -227,6 +227,14 @@ class AssetLineageEdge(StrictBaseModel):
 
     source_id: str
     target_id: str
+    column_lineage: dict[str, list["ColumnLineageSource"]] | None = None
+
+
+class ColumnLineageSource(BaseModel):
+    """A source column used to derive a target column."""
+
+    source_asset_uri: str
+    source_column: str
 
 
 class AssetLineageGraphResponse(StrictBaseModel):
