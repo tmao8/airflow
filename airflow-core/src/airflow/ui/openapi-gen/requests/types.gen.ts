@@ -2523,6 +2523,7 @@ export type GetAssetResponse = AssetResponse;
 
 export type GetAssetLineageData = {
     assetId: number;
+    depth?: number;
 };
 
 export type GetAssetLineageResponse = AssetLineageGraphResponse;

@@ -813,7 +813,9 @@ paths:
       tags:
       - Asset
       summary: Get Asset Lineage
-      description: Get the lineage graph for an asset.
+      description: "Get the cross-DAG lineage graph for an asset.\n\nPerforms a breadth-first\
+        \ traversal across asset-task-asset chains in both\nupstream and downstream\
+        \ directions, up to *depth* hops from the root asset."
       operationId: get_asset_lineage
       security:
       - OAuth2PasswordBearer: []
@@ -825,6 +827,70 @@ paths:
         schema:
           type: integer
           title: Asset Id
+      - name: depth
+        in: query
+        required: false
+        schema:
+          type: integer
+          default: 3
+          title: Depth
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AssetLineageGraphResponse'
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPExceptionResponse'
+          description: Unauthorized
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPExceptionResponse'
+          description: Forbidden
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPExceptionResponse'
+          description: Not Found
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v2/assets/{asset_id}/lineage/asset-only:
+    get:
+      tags:
+      - Asset
+      summary: Get Asset Only Lineage
+      description: "Get the asset-only lineage graph for an asset.\n\nBuilds the standard\
+        \ lineage graph first, then collapses asset-task-asset\npaths into direct\
+        \ asset-to-asset edges and excludes task and DAG nodes."
+      operationId: get_asset_only_lineage
+      security:
+      - OAuth2PasswordBearer: []
+      - HTTPBearer: []
+      parameters:
+      - name: asset_id
+        in: path
+        required: true
+        schema:
+          type: integer
+          title: Asset Id
+      - name: depth
+        in: query
+        required: false
+        schema:
+          type: integer
+          default: 3
+          title: Depth
       responses:
         '200':
           description: Successful Response
