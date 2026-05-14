@@ -31,8 +31,7 @@
   "poolSlots": "Emplacements de pool",
   "sortBy": {
     "newestFirst": "Plus récents d'abord",
-    "oldestFirst": "Plus anciens d'abord",
-    "placeholder": "Sort by"
+    "oldestFirst": "Plus anciens d'abord"
   },
   "source": "Source",
   "stats": {

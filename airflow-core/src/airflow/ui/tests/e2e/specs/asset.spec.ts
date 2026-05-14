@@ -80,39 +80,4 @@ test.describe("Assets Page", () => {
     await assetDetailPage.verifyProducingTasks();
     await assetDetailPage.verifyScheduledDags();
   });
-
-  test("verify lineage search recenters the graph to the matched node", async ({ assetDetailPage, page }) => {
-    const assetName = testConfig.asset.name;
-
-    await assetDetailPage.goto();
-    await assetDetailPage.clickOnAsset(assetName);
-    await page.getByRole("button", { name: /data lineage/i }).click();
-
-    await expect(assetDetailPage.lineageSearchInput).toBeVisible();
-    await expect(assetDetailPage.graphNode("producing_task_1")).toBeVisible();
-
-    const initialTransform = await assetDetailPage.getViewportTransform();
-
-    await assetDetailPage.searchLineage("producing_task_1");
-
-    await expect(assetDetailPage.lineageSearchInput).toHaveValue("producing_task_1");
-    await expect
-      .poll(async () => assetDetailPage.getViewportTransform(), {
-        intervals: [250, 500, 1000],
-        timeout: 10_000,
-      })
-      .not.toBe(initialTransform);
-  });
-
-  test("verify asset only lineage mode hides task nodes", async ({ assetDetailPage }) => {
-    await assetDetailPage.gotoMockAsset(1);
-
-    await expect(assetDetailPage.lineageSearchInput).toBeVisible();
-    await expect(assetDetailPage.graphNode("producer_task")).toBeVisible();
-
-    await assetDetailPage.switchToAssetOnly();
-
-    await expect(assetDetailPage.graphNode("producer_task")).toHaveCount(0);
-    await expect(assetDetailPage.graphNode("team_b_player_stats")).toBeVisible();
-  });
 });

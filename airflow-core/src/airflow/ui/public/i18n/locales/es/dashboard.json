@@ -31,8 +31,7 @@
   "poolSlots": "Slots del Pool",
   "sortBy": {
     "newestFirst": "Más Recientes",
-    "oldestFirst": "Más Antiguos",
-    "placeholder": "Sort by"
+    "oldestFirst": "Más Antiguos"
   },
   "source": "Origen",
   "stats": {

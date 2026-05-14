@@ -34,7 +34,6 @@ concurrency:
 
 jobs:
   analyze:
-    if: github.repository == 'apache/airflow'
     name: Analyze
     runs-on: ["ubuntu-22.04"]
     strategy:

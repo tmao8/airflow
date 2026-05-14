@@ -21,14 +21,11 @@ import { FiDatabase } from "react-icons/fi";
 
 import type { AssetResponse } from "openapi/requests/types.gen";
 import { HeaderCard } from "src/components/HeaderCard";
-import { Tag } from "src/components/ui/Tag";
 
 import { DependencyPopover } from "../AssetsList/DependencyPopover";
-import { getAssetType, getAssetTypeColorPalette } from "./assetInsightsUtils";
 
 export const Header = ({ asset }: { readonly asset?: AssetResponse }) => {
   const { t: translate } = useTranslation("assets");
-  const assetType = asset === undefined ? "Asset" : getAssetType(asset);
 
   const stats = [
     { label: translate("group"), value: asset?.group },
@@ -46,16 +43,5 @@ export const Header = ({ asset }: { readonly asset?: AssetResponse }) => {
     },
   ];
 
-  return (
-    <HeaderCard
-      icon={<FiDatabase />}
-      stats={stats}
-      subTitle={
-        <Tag colorPalette={getAssetTypeColorPalette(assetType)} size="sm" variant="subtle">
-          {assetType}
-        </Tag>
-      }
-      title={asset?.name}
-    />
-  );
+  return <HeaderCard icon={<FiDatabase />} stats={stats} title={asset?.name} />;
 };

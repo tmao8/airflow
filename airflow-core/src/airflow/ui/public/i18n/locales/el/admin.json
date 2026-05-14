@@ -3,7 +3,6 @@
     "description": "Περιγραφή",
     "key": "Κλειδί",
     "name": "Όνομα",
-    "team": "Team",
     "value": "Τιμή"
   },
   "config": {
@@ -50,12 +49,6 @@
     "searchPlaceholder": "Αναζήτηση Συνδέσεων",
     "test": "Δοκιμή Σύνδεσης",
     "testDisabled": "Η λειτουργία δοκιμής σύνδεσης είναι απενεργοποιημένη. Επικοινωνήστε με τον διαχειριστή για να την ενεργοποιήσει.",
-    "testError": {
-      "title": "Test Connection Failed"
-    },
-    "testSuccess": {
-      "title": "Test Connection Successful"
-    },
     "typeMeta": {
       "error": "Αποτυχία ανάκτησης μεταδεδομένων τύπου σύνδεσης",
       "standardFields": {
@@ -81,23 +74,6 @@
   "formActions": {
     "save": "Αποθήκευση"
   },
-  "jobs": {
-    "columns": {
-      "executorClass": "Executor Class",
-      "hostname": "Hostname",
-      "id": "ID",
-      "jobType": "Job Type",
-      "latestHeartbeat": "Latest Heartbeat",
-      "unixname": "Unix Name"
-    },
-    "filters": {
-      "allStates": "All States",
-      "allTypes": "All Types",
-      "dagProcessorJob": "DagProcessorJob",
-      "schedulerJob": "SchedulerJob",
-      "triggererJob": "TriggererJob"
-    }
-  },
   "plugins": {
     "columns": {
       "source": "Πηγή"
@@ -120,8 +96,7 @@
       "includeDeferred": "Συμπερίληψη Αναβληθέντων",
       "nameMaxLength": "Το όνομα μπορεί να περιέχει έως 256 χαρακτήρες",
       "nameRequired": "Το όνομα είναι υποχρεωτικό",
-      "slots": "Slots",
-      "slotsHelperText": "Use -1 for unlimited slots."
+      "slots": "Slots"
     },
     "noPoolsFound": "Δεν βρέθηκαν pools",
     "pool_one": "Pool",

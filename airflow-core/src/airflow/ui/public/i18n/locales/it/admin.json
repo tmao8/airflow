@@ -3,7 +3,6 @@
     "description": "Descrizione",
     "key": "Chiave",
     "name": "Nome",
-    "team": "Team",
     "value": "Valore"
   },
   "config": {
@@ -56,12 +55,6 @@
     "searchPlaceholder": "Cercare Connessioni",
     "test": "Test Connessione",
     "testDisabled": "La funzione di test della connessione è disabilitata. Per favore contatta un amministratore per abilitarla.",
-    "testError": {
-      "title": "Test Connection Failed"
-    },
-    "testSuccess": {
-      "title": "Test Connection Successful"
-    },
     "typeMeta": {
       "error": "Impossibile recuperare il tipo di connessione",
       "standardFields": {
@@ -87,23 +80,6 @@
   "formActions": {
     "save": "Salva"
   },
-  "jobs": {
-    "columns": {
-      "executorClass": "Executor Class",
-      "hostname": "Hostname",
-      "id": "ID",
-      "jobType": "Job Type",
-      "latestHeartbeat": "Latest Heartbeat",
-      "unixname": "Unix Name"
-    },
-    "filters": {
-      "allStates": "All States",
-      "allTypes": "All Types",
-      "dagProcessorJob": "DagProcessorJob",
-      "schedulerJob": "SchedulerJob",
-      "triggererJob": "TriggererJob"
-    }
-  },
   "plugins": {
     "columns": {
       "source": "Fonte"
@@ -128,8 +104,7 @@
       "includeDeferred": "Includi Deferiti",
       "nameMaxLength": "Il nome può contenere un massimo di 256 caratteri",
       "nameRequired": "Il nome è obbligatorio",
-      "slots": "Slot",
-      "slotsHelperText": "Use -1 for unlimited slots."
+      "slots": "Slot"
     },
     "noPoolsFound": "Nessun pool trovato",
     "pool_many": "Pools",

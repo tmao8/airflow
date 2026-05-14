@@ -29,8 +29,7 @@
   "poolSlots": "Θέσεις Pool",
   "sortBy": {
     "newestFirst": "Νεότερα Πρώτα",
-    "oldestFirst": "Παλαιότερα Πρώτα",
-    "placeholder": "Sort by"
+    "oldestFirst": "Παλαιότερα Πρώτα"
   },
   "source": "Πηγή",
   "stats": {

@@ -54,7 +54,6 @@ export default defineConfig({
   test: {
     coverage: {
       include: ["src/**/*.ts", "src/**/*.tsx"],
-      reporter: ["text", "lcovonly", "cobertura"],
     },
     css: true,
     environment: "happy-dom",

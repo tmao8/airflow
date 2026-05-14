@@ -28,21 +28,18 @@ import { useOpenGroups } from "src/context/openGroups";
 import { NodeWrapper } from "./NodeWrapper";
 import { SegmentedStateBar } from "./SegmentedStateBar";
 import { TaskLink } from "./TaskLink";
-import { getLineageNodeStyle } from "./lineageStyles";
 import type { CustomNodeProps } from "./reactflowUtils";
 
 export const TaskNode = ({
   data: {
     childCount,
     depth,
-    disableNavigation,
     height = 0,
     isGroup,
     isMapped,
     isOpen,
     isSelected,
     label,
-    lineageStyle,
     operator,
     setupTeardownType,
     taskInstance,
@@ -79,17 +76,6 @@ export const TaskNode = ({
   const { dagId, taskId } = parseDagIdFromLabel(label);
   const displayLabel = dagId === undefined ? label : taskId;
   const displayOperator = operator ?? dagId;
-  const nodeStyles = getLineageNodeStyle({
-    defaultBackground: isOpen && depth !== undefined && depth % 2 === 0 ? "bg.muted" : "bg",
-    defaultBorderColor: isSelected
-      ? "blue.500"
-      : taskInstance?.state
-        ? `${taskInstance.state}.solid`
-        : "border",
-    defaultBorderWidth: isSelected ? 4 : 2,
-    lineageStyle,
-  });
-  const shouldExpandSize = lineageStyle === "focus" || (lineageStyle === undefined && isSelected);
 
   const thisChildCount = Object.entries(taskInstance?.child_states ?? {})
     .map(([_state, count]) => count)
@@ -107,38 +93,34 @@ export const TaskNode = ({
           tooltip={isGroup ? tooltip : undefined}
         >
           <Flex
-            bg={nodeStyles.background}
-            borderColor={nodeStyles.borderColor}
+            // Alternate background color for nested open groups
+            bg={isOpen && depth !== undefined && depth % 2 === 0 ? "bg.muted" : "bg"}
+            borderColor={
+              isSelected ? "blue.500" : taskInstance?.state ? `${taskInstance.state}.solid` : "border"
+            }
             borderRadius={5}
-            borderWidth={nodeStyles.borderWidth}
-            boxShadow={nodeStyles.boxShadow}
+            borderWidth={isSelected ? 4 : 2}
             direction="column"
-            height={`${height + (shouldExpandSize ? 4 : 0)}px`}
+            height={`${height + (isSelected ? 4 : 0)}px`}
             overflow="hidden"
             position="relative"
-            px={shouldExpandSize ? 1 : 2}
-            py={shouldExpandSize ? 0 : 1}
-            transform={nodeStyles.transform}
-            transition="background-color 0.2s, border-color 0.2s, box-shadow 0.2s, transform 0.2s"
-            width={`${width + (shouldExpandSize ? 4 : 0)}px`}
+            px={isSelected ? 1 : 2}
+            py={isSelected ? 0 : 1}
+            width={`${width + (isSelected ? 4 : 0)}px`}
           >
             <HStack>
               <TaskIcon />
-              {disableNavigation ? (
-                <Text fontWeight="bold">{displayLabel}</Text>
-              ) : (
-                <LinkOverlay asChild>
-                  <TaskLink
-                    childCount={thisChildCount}
-                    id={id}
-                    isGroup={isGroup}
-                    isMapped={isMapped}
-                    isOpen={isOpen}
-                    label={displayLabel}
-                    setupTeardownType={setupTeardownType}
-                  />
-                </LinkOverlay>
-              )}
+              <LinkOverlay asChild>
+                <TaskLink
+                  childCount={thisChildCount}
+                  id={id}
+                  isGroup={isGroup}
+                  isMapped={isMapped}
+                  isOpen={isOpen}
+                  label={displayLabel}
+                  setupTeardownType={setupTeardownType}
+                />
+              </LinkOverlay>
             </HStack>
             <Text
               color="fg.muted"

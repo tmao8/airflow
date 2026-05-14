@@ -29,8 +29,7 @@
   "poolSlots": "プールスロット",
   "sortBy": {
     "newestFirst": "新しい順",
-    "oldestFirst": "古い順",
-    "placeholder": "Sort by"
+    "oldestFirst": "古い順"
   },
   "source": "ソース",
   "stats": {

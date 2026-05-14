@@ -63,12 +63,6 @@ def team_b_player_stats():
     pass
 
 
-team_b_player_stats_ref = Asset(
-    uri="file://incoming/player-stats/team_b.csv",
-    name="team_b_player_stats",
-)
-
-
 @asset(
     uri="file://incoming/player-stats/team_c.csv",
     schedule=CronPartitionTimetable("30 * * * *", timezone="UTC"),
@@ -94,10 +88,7 @@ with DAG(
     This Dag demonstrates multi-asset partition alignment using StartOfHourMapper.
     """
 
-    @task(
-        inlets=[team_a_player_stats, team_b_player_stats, team_c_player_stats],
-        outlets=[combined_player_stats],
-    )
+    @task(outlets=[combined_player_stats])
     def combine_player_stats(dag_run=None):
         """Merge the aligned hourly partitions into a combined dataset."""
         if TYPE_CHECKING:
@@ -107,37 +98,28 @@ with DAG(
     combine_player_stats()
 
 
-computed_player_odds = Asset(
+@asset(
     uri="file://analytics/player-stats/computed-player-odds.csv",
-    name="compute_player_odds",
-)
-
-with DAG(
-    dag_id="compute_player_odds",
     # Fallback to IdentityMapper if no partition_mapper is specified.
     # If we want to other temporal mapper (e.g., StartOfHourMapper) here,
     # make sure the input_format is changed since the partition_key is now in "%Y-%m-%dT%H" format
     # instead of a valid timestamp
     schedule=PartitionedAssetTimetable(assets=combined_player_stats),
     tags=["player-stats", "odds"],
-):
+)
+def compute_player_odds():
+    """
+    Compute player odds from the combined hourly statistics.
 
-    @task(inlets=[combined_player_stats], outlets=[computed_player_odds])
-    def compute_player_odds_task():
-        """
-        Compute player odds from the combined hourly statistics.
-
-        This task emits the compute_player_odds asset and keeps task-level lineage explicit.
-        """
-        pass
-
-    compute_player_odds_task()
+    This asset is partition-aware and triggered by the combined stats asset.
+    """
+    pass
 
 
 with DAG(
     dag_id="player_odds_quality_check_wont_ever_to_trigger",
     schedule=PartitionedAssetTimetable(
-        assets=(combined_player_stats & team_a_player_stats & team_b_player_stats_ref),
+        assets=(combined_player_stats & team_a_player_stats & Asset.ref(name="team_b_player_stats")),
         partition_mapper_config={
             combined_player_stats: StartOfYearMapper(),  # incompatible on purpose
             team_a_player_stats: StartOfHourMapper(),
@@ -154,7 +136,7 @@ with DAG(
     that never matches ("%Y" v.s. "%Y-%m-%dT%H), so the Dag will never trigger.
     """
 
-    @task(inlets=[combined_player_stats, team_a_player_stats, team_b_player_stats_ref])
+    @task
     def check_partition_alignment():
         pass
 

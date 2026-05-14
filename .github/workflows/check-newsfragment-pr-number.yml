@@ -33,11 +33,7 @@ concurrency:
 
 jobs:
   check-newsfragment-pr-number:
-    if: >-
-      ${{
-        github.repository == 'apache/airflow'
-        && !contains(github.event.pull_request.labels.*.name, 'skip newsfragment check')
-      }}
+    if: ${{ !contains(github.event.pull_request.labels.*.name, 'skip newsfragment check') }}
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
