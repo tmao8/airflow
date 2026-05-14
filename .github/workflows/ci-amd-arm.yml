@@ -48,6 +48,7 @@ concurrency:
 
 jobs:
   build-info:
+    if: github.repository == 'apache/airflow'
     name: "Build info"
     # At build-info stage we do not yet have outputs so we need to hard-code the runs-on to public runners
     runs-on: ["ubuntu-22.04"]
@@ -222,6 +223,7 @@ jobs:
     uses: ./.github/workflows/basic-tests.yml
     with:
       runners: ${{ needs.build-info.outputs.runner-type }}
+      run-coverage: ${{ needs.build-info.outputs.run-coverage }}
       run-ui-tests: ${{needs.build-info.outputs.run-ui-tests}}
       run-www-tests: ${{needs.build-info.outputs.run-www-tests}}
       run-api-codegen: ${{needs.build-info.outputs.run-api-codegen}}
@@ -235,6 +237,8 @@ jobs:
       use-uv: ${{needs.build-info.outputs.use-uv}}
       platform: ${{ needs.build-info.outputs.platform }}
       shared-distributions-as-json: ${{needs.build-info.outputs.shared-distributions-as-json}}
+    secrets:
+      CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
 
   build-ci-images:
     name: Build CI images

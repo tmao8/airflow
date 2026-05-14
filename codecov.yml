@@ -35,7 +35,11 @@ coverage:
         threshold: 0%
         base: auto
         paths:
-          - "airflow"
+          - "airflow-core"
+          - "airflow-ctl"
+          - "providers"
+          - "shared"
+          - "task-sdk"
         # advanced
         branches:
           - main
@@ -70,6 +74,8 @@ coverage:
     patch:
       default:
         # basic
+        # Temporarily keep patch coverage non-blocking until the repo-level Codecov
+        # integration is verified end-to-end in this fork.
         target: auto
         threshold: 0%
         base: auto
@@ -105,7 +111,11 @@ coverage:
         if_ci_failed: error
         only_pulls: false
         paths:
-          - "airflow"
+          - "airflow-core"
+          - "airflow-ctl"
+          - "providers"
+          - "shared"
+          - "task-sdk"
 
 ignore:
   - "airflow/_vendor"
@@ -114,7 +124,7 @@ ignore:
   - "airflow/example_dags"
   - "airflow/migrations"
   - "airflow/providers/**/example_dags"
-  - "airflow/ui/node_modules"
-  - "airflow/api_fastapi/auth/managers/simple/ui/node_modules"
+  - "airflow-core/src/airflow/ui/node_modules"
+  - "airflow-core/src/airflow/api_fastapi/auth/managers/simple/ui/node_modules"
 
 comment: false

@@ -25,6 +25,22 @@ export class AssetDetailPage extends BasePage {
     return "/assets";
   }
 
+  public get assetOnlyButton(): Locator {
+    return this.page.getByRole("button", { name: /^Asset Only$/ });
+  }
+
+  public get fullLineageButton(): Locator {
+    return this.page.getByRole("button", { name: /^Full$/ });
+  }
+
+  public get graphViewport(): Locator {
+    return this.page.locator(".react-flow__viewport");
+  }
+
+  public get lineageSearchInput(): Locator {
+    return this.page.getByPlaceholder("Search lineage nodes");
+  }
+
   public constructor(page: Page) {
     super(page);
   }
@@ -43,10 +59,35 @@ export class AssetDetailPage extends BasePage {
     return this.page.getByRole("heading", { name });
   }
 
+  public async getViewportTransform(): Promise<string> {
+    return this.graphViewport.evaluate((element) => getComputedStyle(element).transform);
+  }
+
   public async goto(): Promise<void> {
     await this.navigateTo(AssetDetailPage.url);
   }
 
+  public async gotoMockAsset(assetId = 1): Promise<void> {
+    await this.navigateTo(`/assets/${assetId}?mockAssets=true`);
+  }
+
+  public graphNode(name: string): Locator {
+    return this.page.locator(".react-flow__node").filter({
+      hasText: name,
+    });
+  }
+
+  public async searchLineage(term: string): Promise<void> {
+    await this.lineageSearchInput.fill(term);
+  }
+
+  public async switchToAssetOnly(): Promise<void> {
+    await this.assetOnlyButton.click();
+  }
+
+  public async verifyAssetDetails(name: string): Promise<void> {
+    await expect(this.page.getByRole("heading", { name })).toBeVisible();
+  }
   public async verifyProducingTasks(): Promise<void> {
     await this.verifyStatSection("Producing Tasks");
   }
@@ -60,7 +101,7 @@ export class AssetDetailPage extends BasePage {
    * Uses stable selectors based on text content and ARIA roles
    */
   private async verifyStatSection(labelText: string): Promise<void> {
-    const label = this.page.getByText(labelText, { exact: true });
+    const label = this.page.getByRole("heading", { exact: true, name: labelText });
 
     await expect(label).toBeVisible();
 
