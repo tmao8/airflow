@@ -81,8 +81,7 @@ test.describe("Assets Page", () => {
     await assetDetailPage.verifyScheduledDags();
   });
 
-  test("verify lineage search recenters the graph to the matched node", async ({ page }) => {
-    const assetDetailPage = new AssetDetailPage(page);
+  test("verify lineage search recenters the graph to the matched node", async ({ assetDetailPage, page }) => {
     const assetName = testConfig.asset.name;
 
     await assetDetailPage.goto();
@@ -105,9 +104,7 @@ test.describe("Assets Page", () => {
       .not.toBe(initialTransform);
   });
 
-  test("verify asset only lineage mode hides task nodes", async ({ page }) => {
-    const assetDetailPage = new AssetDetailPage(page);
-
+  test("verify asset only lineage mode hides task nodes", async ({ assetDetailPage }) => {
     await assetDetailPage.gotoMockAsset(1);
 
     await expect(assetDetailPage.lineageSearchInput).toBeVisible();
