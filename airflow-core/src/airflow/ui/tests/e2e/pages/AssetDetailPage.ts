@@ -73,7 +73,7 @@ export class AssetDetailPage extends BasePage {
 
   public graphNode(name: string): Locator {
     return this.page.locator(".react-flow__node").filter({
-      has: this.page.getByText(name, { exact: true }),
+      hasText: name,
     });
   }
 
